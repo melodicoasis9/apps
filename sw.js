@@ -1,4 +1,4 @@
-const CACHE = 'tango-v4';
+const CACHE = 'tango-v5';
 const FILES = [
   '/apps/',
   '/apps/index.html',
@@ -20,7 +20,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Always fetch fresh from network, fall back to cache
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
