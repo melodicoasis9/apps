@@ -13,7 +13,33 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' rx='88' fill='%23f9f4ee'/%3E%3Crect x='108' y='118' width='188' height='148' rx='14' fill='%23e8e0d8' transform='rotate(-6 200 192)'/%3E%3Crect x='108' y='112' width='188' height='148' rx='14' fill='%23d4c9be' transform='rotate(-3 200 186)'/%3E%3Crect x='106' y='88' width='188' height='150' rx='14' fill='%23ffffff'/%3E%3Ccircle cx='272' cy='106' r='10' fill='%23e63946'/%3E%3Ctext x='200' y='198' text-anchor='middle' font-family='serif' font-size='96' font-weight='700' fill='%23111111'%3E単%3C/text%3E%3Crect x='140' y='218' width='120' height='3' rx='1.5' fill='%23e63946'/%3E%3C/svg%3E">
-<title>Tango</title><!-- v6 -->
+<title>Tango</title><!-- v8 -->
+<script>
+// Run before paint to avoid flash
+(function() {
+  const dark = {
+    '--bg':'#111111','--surface':'#1e1e1e','--border':'#2e2e2e',
+    '--ink':'#f0f0f0','--ink2':'#999999','--ink3':'#555555',
+    '--red':'#ff4d5a','--red-dim':'#3a1518',
+    '--green':'#3dbf85','--green-dim':'#0e2e20',
+    '--amber':'#f0a030','--amber-dim':'#2e1f05'
+  };
+  const light = {
+    '--bg':'#f9f9f7','--surface':'#ffffff','--border':'#e8e8e4',
+    '--ink':'#111111','--ink2':'#666666','--ink3':'#aaaaaa',
+    '--red':'#e63946','--red-dim':'#fdecea',
+    '--green':'#2d9f6e','--green-dim':'#e3f5ee',
+    '--amber':'#d4820a','--amber-dim':'#fef3e2'
+  };
+  function applyVars(vars) {
+    Object.entries(vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
+  }
+  const mode = localStorage.getItem('tango_theme') || 'auto';
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = mode === 'dark' || (mode === 'auto' && systemDark);
+  applyVars(isDark ? dark : light);
+})();
+</script>
 <style>
 /* Light mode values (default) */
 :root {
@@ -1114,8 +1140,7 @@ const lightVars = {
 };
 
 function applyVars(vars) {
-  const root = document.documentElement;
-  Object.entries(vars).forEach(([k,v]) => root.style.setProperty(k, v));
+  Object.entries(vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
 }
 
 function applyTheme(mode) {
@@ -1136,14 +1161,8 @@ function updateThemeBtns(mode) {
   });
 }
 
-// Apply immediately before paint
-const savedTheme = localStorage.getItem('tango_theme') || 'auto';
-applyTheme(savedTheme);
+updateThemeBtns(localStorage.getItem('tango_theme') || 'auto');
 
-// Update buttons once DOM is ready
-window.addEventListener('DOMContentLoaded', () => updateThemeBtns(savedTheme));
-
-// Follow system changes when in auto mode
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   const current = localStorage.getItem('tango_theme') || 'auto';
   if (current === 'auto') applyTheme('auto');
