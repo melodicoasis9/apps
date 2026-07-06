@@ -32,6 +32,38 @@
   --r-sm: 8px;
 }
 
+[data-theme="dark"] {
+  --bg: #111111;
+  --surface: #1e1e1e;
+  --border: #2e2e2e;
+  --ink: #f0f0f0;
+  --ink2: #999999;
+  --ink3: #555555;
+  --red: #ff4d5a;
+  --red-dim: #3a1518;
+  --green: #3dbf85;
+  --green-dim: #0e2e20;
+  --amber: #f0a030;
+  --amber-dim: #2e1f05;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111111;
+    --surface: #1e1e1e;
+    --border: #2e2e2e;
+    --ink: #f0f0f0;
+    --ink2: #999999;
+    --ink3: #555555;
+    --red: #ff4d5a;
+    --red-dim: #3a1518;
+    --green: #3dbf85;
+    --green-dim: #0e2e20;
+    --amber: #f0a030;
+    --amber-dim: #2e1f05;
+  }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
@@ -142,13 +174,13 @@ nav button.active::after {
 .field-row select.field { flex: 0 0 120px; }
 .btn-primary {
   width: 100%; padding: 12px;
-  background: var(--ink); color: #fff;
+  background: var(--red); color: #fff;
   border: none; border-radius: var(--r-sm);
   font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
   cursor: pointer; margin-top: 8px; transition: opacity 0.15s;
 }
 .btn-primary:hover { opacity: 0.85; }
-.btn-primary.red { background: var(--red); }
+.btn-primary.dark { background: var(--ink); }
 
 /* ── CARD LIST ── */
 .card-list { display: flex; flex-direction: column; gap: 6px; }
@@ -327,6 +359,17 @@ nav button.active::after {
 .drawer h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
 .drawer-section { margin-bottom: 24px; }
 .drawer-section .section-title { margin-bottom: 10px; }
+.theme-row { display: flex; gap: 8px; }
+.theme-btn {
+  flex: 1; padding: 10px 6px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--ink2); cursor: pointer; transition: all 0.15s;
+}
+.theme-btn.active {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+
 .import-hint { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
 .import-hint code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
 .file-row { display: flex; gap: 8px; align-items: center; }
@@ -488,6 +531,15 @@ nav button.active::after {
         <button class="btn-primary" style="width:auto;padding:10px 16px;margin-top:0" onclick="importFile()">Import</button>
       </div>
       <div id="import-msg" class="import-msg"></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="section-title">Appearance</div>
+      <div class="theme-row">
+        <button class="theme-btn" id="theme-light" onclick="setTheme('light')">☀️ Light</button>
+        <button class="theme-btn" id="theme-auto"  onclick="setTheme('auto')">🌗 Auto</button>
+        <button class="theme-btn" id="theme-dark"  onclick="setTheme('dark')">🌙 Dark</button>
+      </div>
     </div>
 
     <div class="drawer-section">
@@ -1057,6 +1109,31 @@ function shuffle(a) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── THEME ─────────────────────────────────────────────────────
+function setTheme(mode) {
+  localStorage.setItem('tango_theme', mode);
+  applyTheme(mode);
+  ['light','auto','dark'].forEach(m => {
+    document.getElementById('theme-'+m)?.classList.toggle('active', m===mode);
+  });
+}
+function applyTheme(mode) {
+  const root = document.documentElement;
+  if (mode==='dark') root.setAttribute('data-theme','dark');
+  else if (mode==='light') root.setAttribute('data-theme','light');
+  else root.removeAttribute('data-theme');
+}
+(function() {
+  const saved = localStorage.getItem('tango_theme') || 'auto';
+  applyTheme(saved);
+  // set active button after DOM loads
+  window.addEventListener('DOMContentLoaded', () => {
+    ['light','auto','dark'].forEach(m => {
+      document.getElementById('theme-'+m)?.classList.toggle('active', m===saved);
+    });
+  });
+})();
 
 // ── BOOT ──────────────────────────────────────────────────────
 syncSelects();
