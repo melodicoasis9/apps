@@ -1,4 +1,4 @@
-const CACHE = 'tango-v5';
+const CACHE = 'tango-v6';
 const FILES = [
   '/apps/',
   '/apps/index.html',
