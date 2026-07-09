@@ -34,10 +34,11 @@
   function applyVars(vars) {
     Object.entries(vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
   }
-  const mode = localStorage.getItem('tango_theme') || 'auto';
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = mode === 'dark' || (mode === 'auto' && systemDark);
-  applyVars(isDark ? dark : light);
+  applyVars(systemDark ? dark : light);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    applyVars(e.matches ? dark : light);
+  });
 })();
 </script>
 <style>
@@ -370,16 +371,6 @@ nav button.active::after {
 .drawer h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
 .drawer-section { margin-bottom: 24px; }
 .drawer-section .section-title { margin-bottom: 10px; }
-.theme-row { display: flex; gap: 8px; }
-.theme-btn {
-  flex: 1; padding: 10px 6px; border-radius: var(--r-sm);
-  border: 1.5px solid var(--border); background: var(--bg);
-  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
-  color: var(--ink2); cursor: pointer; transition: all 0.15s;
-}
-.theme-btn.active {
-  background: var(--ink); color: #fff; border-color: var(--ink);
-}
 
 .import-hint { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
 .import-hint code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
@@ -547,15 +538,6 @@ nav button.active::after {
     </div>
 
     <div class="drawer-section">
-      <div class="section-title">Appearance</div>
-      <div class="theme-row">
-        <button class="theme-btn" id="theme-light" onclick="setTheme('light')">☀️ Light</button>
-        <button class="theme-btn" id="theme-auto"  onclick="setTheme('auto')">🌗 Auto</button>
-        <button class="theme-btn" id="theme-dark"  onclick="setTheme('dark')">🌙 Dark</button>
-      </div>
-    </div>
-
-    <div class="drawer-section">
       <div class="section-title">Decks</div>
       <button class="btn-outline" onclick="newDeck()" style="width:100%;margin-bottom:8px">+ New deck</button>
       <button class="btn-outline" onclick="deleteDeck()" style="width:100%;color:var(--red);border-color:var(--red)">Delete current deck</button>
@@ -574,22 +556,7 @@ function defaultData() {
     cardStats: {},
     forgotten: {},
     decks: {
-      'Basic Words': [
-        {id:uid(),jp:'猫',reading:'neko',meaning:'cat',type:'word'},
-        {id:uid(),jp:'犬',reading:'inu',meaning:'dog',type:'word'},
-        {id:uid(),jp:'水',reading:'mizu',meaning:'water',type:'word'},
-        {id:uid(),jp:'食べる',reading:'taberu',meaning:'to eat',type:'word'},
-        {id:uid(),jp:'飲む',reading:'nomu',meaning:'to drink',type:'word'},
-        {id:uid(),jp:'本',reading:'hon',meaning:'book',type:'word'},
-        {id:uid(),jp:'山',reading:'yama',meaning:'mountain',type:'word'},
-        {id:uid(),jp:'空',reading:'sora',meaning:'sky',type:'word'},
-      ],
-      'Phrases': [
-        {id:uid(),jp:'おはようございます',reading:'ohayou gozaimasu',meaning:'Good morning',type:'phrase'},
-        {id:uid(),jp:'ありがとうございます',reading:'arigatou gozaimasu',meaning:'Thank you',type:'phrase'},
-        {id:uid(),jp:'すみません',reading:'sumimasen',meaning:'Excuse me / Sorry',type:'phrase'},
-        {id:uid(),jp:'どこですか？',reading:'doko desu ka?',meaning:'Where is it?',type:'phrase'},
-      ]
+      'My Deck': []
     }
   };
 }
@@ -1122,51 +1089,6 @@ function shuffle(a) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ── THEME ─────────────────────────────────────────────────────
-const darkVars = {
-  '--bg':'#111111','--surface':'#1e1e1e','--border':'#2e2e2e',
-  '--ink':'#f0f0f0','--ink2':'#999999','--ink3':'#555555',
-  '--red':'#ff4d5a','--red-dim':'#3a1518',
-  '--green':'#3dbf85','--green-dim':'#0e2e20',
-  '--amber':'#f0a030','--amber-dim':'#2e1f05'
-};
-const lightVars = {
-  '--bg':'#f9f9f7','--surface':'#ffffff','--border':'#e8e8e4',
-  '--ink':'#111111','--ink2':'#666666','--ink3':'#aaaaaa',
-  '--red':'#e63946','--red-dim':'#fdecea',
-  '--green':'#2d9f6e','--green-dim':'#e3f5ee',
-  '--amber':'#d4820a','--amber-dim':'#fef3e2'
-};
-
-function applyVars(vars) {
-  Object.entries(vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
-}
-
-function applyTheme(mode) {
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = mode === 'dark' || (mode === 'auto' && systemDark);
-  applyVars(isDark ? darkVars : lightVars);
-}
-
-function setTheme(mode) {
-  localStorage.setItem('tango_theme', mode);
-  applyTheme(mode);
-  updateThemeBtns(mode);
-}
-
-function updateThemeBtns(mode) {
-  ['light','auto','dark'].forEach(m => {
-    document.getElementById('theme-'+m)?.classList.toggle('active', m===mode);
-  });
-}
-
-updateThemeBtns(localStorage.getItem('tango_theme') || 'auto');
-
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  const current = localStorage.getItem('tango_theme') || 'auto';
-  if (current === 'auto') applyTheme('auto');
-});
 
 // ── BOOT ──────────────────────────────────────────────────────
 syncSelects();
