@@ -439,6 +439,7 @@ nav button.active::after {
   <div id="tab-cards">
     <div class="deck-row">
       <select class="deck-select" id="deck-select" onchange="renderCardList()"></select>
+      <button class="icon-btn" onclick="renameDeck()" title="Rename deck">✎</button>
       <button class="icon-btn" onclick="newDeck()" title="New deck">+</button>
       <button class="icon-btn destructive" onclick="deleteDeck()" title="Delete deck">🗑</button>
     </div>
@@ -526,9 +527,9 @@ nav button.active::after {
     <div class="drawer-section">
       <div class="section-title">Import cards</div>
       <p class="import-hint">
-        Upload a <strong>.csv</strong> or <strong>.txt</strong> file into the currently selected deck.<br>
-        Format per line: <code>Japanese, Reading, Meaning, Type</code><br>
-        Type options: <code>word</code> <code>phrase</code> <code>hiragana</code> <code>katakana</code>
+        Upload a <strong>.csv</strong> or <strong>.txt</strong> file.<br>
+        Format: <code>Japanese, Reading, Meaning, Type, Deck</code><br>
+        If Deck name is in column 5, cards go there automatically (deck is created if needed). If omitted, cards go to the selected deck.
       </p>
       <div class="file-row">
         <input type="file" id="import-file" accept=".csv,.txt,.tsv">
@@ -611,18 +612,24 @@ function importFile() {
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim()&&!l.startsWith('#'));
-    const deckName = deck();
     const valid = ['word','phrase','hiragana','katakana'];
     let added=0, skipped=0;
     lines.forEach(line => {
       const sep = line.includes('\t') ? '\t' : ',';
       const p = line.split(sep).map(s=>s.trim().replace(/^["']|["']$/g,''));
-      const jp=p[0], reading=p[1]||'', meaning=p[2]||'', type=valid.includes((p[3]||'').toLowerCase())?(p[3]||'').toLowerCase():'word';
+      const jp=p[0], reading=p[1]||'', meaning=p[2]||'';
+      const type = valid.includes((p[3]||'').toLowerCase()) ? p[3].toLowerCase() : 'word';
       if (!jp||!meaning) { skipped++; return; }
+      const rawDeck = p[4] ? p[4].trim() : '';
+      const existingDeck = rawDeck
+        ? Object.keys(state.decks).find(d => d.toLowerCase() === rawDeck.toLowerCase())
+        : null;
+      const deckName = existingDeck || rawDeck || deck() || 'Others';
+      if (!state.decks[deckName]) state.decks[deckName] = [];
       state.decks[deckName].push({id:uid(),jp,reading,meaning,type});
       added++;
     });
-    save(); renderCardList();
+    save(); syncSelects(); renderCardList();
     setMsg(`✓ Imported ${added} card${added!==1?'s':''}${skipped?`, skipped ${skipped}`:''}`, 'ok');
     fi.value='';
   };
@@ -693,6 +700,25 @@ function deleteDeck() {
   delete state.decks[name];
   save(); syncSelects();
   closeSettings();
+}
+
+function renameDeck() {
+  const oldName = deck();
+  const newName = prompt('Rename deck:', oldName);
+  if (!newName || !newName.trim() || newName.trim() === oldName) return;
+  const trimmed = newName.trim();
+  if (state.decks[trimmed]) { alert('A deck with that name already exists.'); return; }
+  // Move cards to new name, preserve order
+  state.decks[trimmed] = state.decks[oldName];
+  delete state.decks[oldName];
+  // Update forgotten list if exists
+  if (state.forgotten[oldName]) {
+    state.forgotten[trimmed] = state.forgotten[oldName];
+    delete state.forgotten[oldName];
+  }
+  save(); syncSelects();
+  document.getElementById('deck-select').value = trimmed;
+  renderCardList();
 }
 
 function openEdit(deckName, cardId) {
