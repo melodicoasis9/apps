@@ -240,7 +240,7 @@ nav button.active::after {
 .study-top .deck-select { flex: 1; }
 .seg { display: flex; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-sm); overflow: hidden; flex-shrink: 0; }
 .seg button { border: none; background: none; padding: 8px 12px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
-.seg button.active { background: var(--ink); color: #fff; }
+.seg button.active { background: #1a1a1a; color: #fff; }
 .prog-bar { height: 2px; background: var(--border); border-radius: 1px; margin-bottom: 16px; }
 .prog-fill { height: 100%; background: var(--red); border-radius: 1px; transition: width 0.3s; }
 .study-stats { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -270,7 +270,7 @@ nav button.active::after {
   user-select: none;
 }
 .fc-front { background: var(--surface); }
-.fc-back  { background: var(--ink); transform: rotateY(180deg); }
+.fc-back  { background: #1a1a1a; transform: rotateY(180deg); border-color: #333 !important; }
 .fc-jp      { font-family: 'Noto Sans JP', sans-serif; font-size: 58px; font-weight: 700; color: var(--ink); line-height: 1; }
 .fc-jp-back { font-family: 'Noto Sans JP', sans-serif; font-size: 58px; font-weight: 700; color: #fff; line-height: 1; }
 .fc-en      { font-size: 24px; font-weight: 600; color: var(--ink); text-align: center; line-height: 1.3; }
@@ -330,8 +330,8 @@ nav button.active::after {
 }
 .feedback.wrong { background: var(--red-dim); color: var(--red); }
 .btn-next {
-  width: 100%; padding: 14px; background: var(--ink); color: #fff;
-  border: none; border-radius: var(--r-sm);
+  width: 100%; padding: 14px; background: #1a1a1a; color: #fff;
+  border: 1.5px solid #333; border-radius: var(--r-sm);
   font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
   cursor: pointer; transition: opacity 0.15s;
 }
@@ -410,8 +410,8 @@ nav button.active::after {
   font-family: 'Inter', sans-serif; font-size: 14px; cursor: pointer;
 }
 .btn-modal-save {
-  flex: 1; padding: 11px; background: var(--ink); color: #fff;
-  border: none; border-radius: var(--r-sm);
+  flex: 1; padding: 11px; background: #1a1a1a; color: #fff;
+  border: 1.5px solid #333; border-radius: var(--r-sm);
   font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 
