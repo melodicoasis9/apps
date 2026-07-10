@@ -538,7 +538,7 @@ nav button.active::after {
       <button class="btn-outline" onclick="newDeck()" style="width:100%">+ New deck</button>
     </div>
 
-    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v15</div>
+    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v16</div>
   </div>
 </div>
 
@@ -905,14 +905,6 @@ function updateStudyStats() {
   document.getElementById('s-for').textContent=studyFor;
   document.getElementById('s-left').textContent=studyQueue.length;
 }
-
-function initCardInteraction() {
-  const card = document.getElementById('fc-card');
-  if (!card) return;
-
-  const SWIPE = 80;   // px to trigger swipe decision
-  const TAP   = 10;   // max movement to count as tap (px)
-  let x0=0, y0=0, dx=0, swiping=false, active=false;
 
 function tapFlip() {
   isFlipped = !isFlipped;
