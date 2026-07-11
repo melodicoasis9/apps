@@ -538,7 +538,7 @@ nav button.active::after {
       <button class="btn-outline" onclick="newDeck()" style="width:100%">+ New deck</button>
     </div>
 
-    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v16</div>
+    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v17</div>
   </div>
 </div>
 
@@ -627,7 +627,7 @@ function switchTab(name) {
   TABS.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t!==name));
   document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', TABS[i]===name));
   syncSelects();
-  if (name==='study') initStudy();
+  if (name==='study' && studyQueue.length === 0 && studyRem === 0 && studyFor === 0) initStudy();
   if (name==='test')  initTest();
   if (name==='stats') renderStats();
 }
