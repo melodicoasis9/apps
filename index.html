@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Sawarabi+Mincho&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' rx='88' fill='%23f9f4ee'/%3E%3Crect x='108' y='118' width='188' height='148' rx='14' fill='%23e8e0d8' transform='rotate(-6 200 192)'/%3E%3Crect x='108' y='112' width='188' height='148' rx='14' fill='%23d4c9be' transform='rotate(-3 200 186)'/%3E%3Crect x='106' y='88' width='188' height='150' rx='14' fill='%23ffffff'/%3E%3Ccircle cx='272' cy='106' r='10' fill='%23e63946'/%3E%3Ctext x='200' y='198' text-anchor='middle' font-family='serif' font-size='96' font-weight='700' fill='%23111111'%3E単%3C/text%3E%3Crect x='140' y='218' width='120' height='3' rx='1.5' fill='%23e63946'/%3E%3C/svg%3E">
 <title>Tango</title><!-- v8 -->
 <script>
@@ -207,7 +207,25 @@ nav button.active::after {
 .btn-primary.dark { background: var(--ink); }
 
 /* ── CARD LIST ── */
-.card-list { display: flex; flex-direction: column; gap: 6px; }
+/* multi-select */
+.card-item { cursor: default; transition: background 0.1s; }
+.card-item.selected { background: var(--red-dim); border-color: var(--red); }
+.select-mode-bar {
+  display: none; align-items: center; justify-content: space-between;
+  padding: 10px 4px; margin-bottom: 8px;
+}
+.select-mode-bar.active { display: flex; }
+.select-mode-bar span { font-size: 13px; color: var(--ink2); }
+.btn-delete-selected {
+  padding: 8px 14px; background: var(--red); color: #fff;
+  border: none; border-radius: var(--r-sm); font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-select-toggle {
+  padding: 8px 12px; background: none; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-family: 'Inter', sans-serif;
+  font-size: 12px; color: var(--ink2); cursor: pointer;
+}
 .card-item {
   background: var(--surface); border: 1.5px solid var(--border);
   border-radius: var(--r-sm); padding: 12px 14px;
@@ -439,6 +457,7 @@ nav button.active::after {
   <div id="tab-cards">
     <div class="deck-row">
       <div class="deck-picker" id="picker-cards"></div>
+      <button class="icon-btn" onclick="toggleSelectMode()" id="btn-select-mode" title="Select cards">☑</button>
       <button class="icon-btn" onclick="renameDeck()" title="Rename deck">✎</button>
       <button class="icon-btn" onclick="newDeck()" title="New deck">+</button>
       <button class="icon-btn destructive" onclick="deleteDeck()" title="Delete deck">🗑</button>
@@ -456,6 +475,14 @@ nav button.active::after {
     </div>
 
     <div class="section-title" id="cards-count-label"></div>
+    <div class="select-mode-bar" id="select-bar">
+      <span id="select-count">0 selected</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-select-toggle" onclick="selectAll()">All</button>
+        <button class="btn-select-toggle" onclick="clearSelection()">None</button>
+        <button class="btn-delete-selected" onclick="deleteSelected()">Delete</button>
+      </div>
+    </div>
     <div id="card-list" class="card-list"></div>
     <div id="empty-cards" class="empty hidden">No cards yet — add one above!</div>
   </div>
@@ -538,7 +565,7 @@ nav button.active::after {
       <button class="btn-outline" onclick="newDeck()" style="width:100%">+ New deck</button>
     </div>
 
-    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v17</div>
+    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v18</div>
   </div>
 </div>
 
@@ -693,26 +720,81 @@ function setMsg(text, cls) {
 }
 
 // ── CARDS TAB ─────────────────────────────────────────────────
+let selectMode = false;
+let selectedIds = new Set();
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedIds.clear();
+  document.getElementById('btn-select-mode').style.color = selectMode ? 'var(--red)' : '';
+  renderCardList();
+}
+
+function toggleSelectCard(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateSelectBar();
+  // Update visual state without full re-render
+  document.querySelectorAll('.card-item').forEach(el => {
+    if (el.dataset.id === id) el.classList.toggle('selected', selectedIds.has(id));
+  });
+}
+
+function updateSelectBar() {
+  const bar = document.getElementById('select-bar');
+  const count = document.getElementById('select-count');
+  bar.classList.toggle('active', selectMode && true);
+  count.textContent = `${selectedIds.size} selected`;
+}
+
+function selectAll() {
+  const name = deck();
+  cards(name).forEach(c => selectedIds.add(c.id));
+  updateSelectBar();
+  document.querySelectorAll('.card-item').forEach(el => el.classList.add('selected'));
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  updateSelectBar();
+  document.querySelectorAll('.card-item').forEach(el => el.classList.remove('selected'));
+}
+
+function deleteSelected() {
+  if (!selectedIds.size) return;
+  if (!confirm(`Delete ${selectedIds.size} card${selectedIds.size!==1?'s':''}?`)) return;
+  const name = deck();
+  state.decks[name] = state.decks[name].filter(c => !selectedIds.has(c.id));
+  selectedIds.clear();
+  save(); renderCardList();
+}
+
 function renderCardList() {
   const name = deck();
   const cs = cards(name);
   const list = document.getElementById('card-list');
   const empty = document.getElementById('empty-cards');
   const lbl = document.getElementById('cards-count-label');
+  const bar = document.getElementById('select-bar');
   lbl.textContent = cs.length ? `${cs.length} card${cs.length!==1?'s':''}` : '';
+  if (bar) bar.classList.toggle('active', selectMode);
   if (!cs.length) { list.innerHTML=''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   list.innerHTML = cs.map(c=>`
-    <div class="card-item">
+    <div class="card-item${selectedIds.has(c.id)?' selected':''}" data-id="${c.id}"
+      onclick="${selectMode ? `toggleSelectCard('${c.id}')` : ''}">
       <span class="jp">${esc(c.jp)}</span>
       <div class="info">
         <div class="meaning">${esc(c.meaning)}</div>
         ${c.reading?`<div class="reading">${esc(c.reading)}</div>`:''}
       </div>
       <div class="type-dot dot-${esc(c.type)}" title="${esc(c.type)}"></div>
-      <button class="act-btn" onclick="openEdit('${esc(name)}','${c.id}')">✎</button>
-      <button class="act-btn del" onclick="deleteCard('${esc(name)}','${c.id}')">×</button>
+      ${!selectMode ? `
+        <button class="act-btn" onclick="openEdit('${esc(name)}','${c.id}')">✎</button>
+        <button class="act-btn del" onclick="deleteCard('${esc(name)}','${c.id}')">×</button>
+      ` : ''}
     </div>`).join('');
+  if (bar) document.getElementById('select-count').textContent = `${selectedIds.size} selected`;
 }
 
 function addCard() {
@@ -827,7 +909,19 @@ function setDirection(dir) {
 
 function initStudy(customQueue) {
   const name=deck('study-deck-select');
-  const cs=customQueue||shuffle([...cards(name)]);
+  let cs;
+  if (customQueue) {
+    cs = customQueue;
+  } else {
+    const all = cards(name);
+    const forgotten = new Set((studyForgottenCards[name]||[]).map(c=>c.id));
+    const stats = state.cardStats||{};
+    // New = never appeared in test stats and not forgotten
+    const isNew = c => !stats[c.id] && !forgotten.has(c.id);
+    const newCards = shuffle(all.filter(isNew));
+    const oldCards = shuffle(all.filter(c => !isNew(c)));
+    cs = [...newCards, ...oldCards]; // new first
+  }
   studyQueue=[...cs]; studyRem=0; studyFor=0;
   document.getElementById('study-done').classList.add('hidden');
   if (!cs.length) {
@@ -844,9 +938,13 @@ function initStudy(customQueue) {
 
 function studyForgotten() {
   const name=deck('study-deck-select');
-  const f=studyForgottenCards[name]||[];
-  if (!f.length) { alert('No forgotten cards!'); return; }
-  initStudy(shuffle([...f]));
+  const forgotten=studyForgottenCards[name]||[];
+  // Only show cards that are actually in forgotten (not remembered)
+  const cs=cards(name);
+  const forgottenIds=new Set(forgotten.map(c=>c.id));
+  const forgottenCards=cs.filter(c=>forgottenIds.has(c.id));
+  if (!forgottenCards.length) { alert('No forgotten cards in this deck!'); return; }
+  initStudy(shuffle([...forgottenCards]));
 }
 
 function showCard() {
@@ -864,13 +962,22 @@ function showCard() {
   const total=studyRem+studyFor+studyQueue.length;
   document.getElementById('prog-fill').style.width=((studyRem+studyFor)/total*100)+'%';
 
+  // Random Japanese font for variety
+  const jpFonts = [
+    "'Noto Sans JP', sans-serif",
+    "'Noto Serif JP', serif",
+    "'M PLUS Rounded 1c', sans-serif",
+    "'Sawarabi Mincho', serif",
+  ];
+  const jpFont = jpFonts[Math.floor(Math.random() * jpFonts.length)];
+
   const frontHTML = studyDir==='jp'
-    ? `<div class="fc-jp">${esc(c.jp)}</div><div class="fc-hint">tap to flip</div>`
+    ? `<div class="fc-jp" style="font-family:${jpFont}">${esc(c.jp)}</div><div class="fc-hint">tap to flip</div>`
     : `<div class="fc-en">${esc(c.meaning)}</div><div class="fc-hint">tap to flip</div>`;
 
   const backHTML = studyDir==='jp'
-    ? `<div class="fc-en-back">${esc(c.meaning)}</div>${c.reading?`<div class="fc-reading">${esc(c.reading)}</div>`:''}<div class="fc-hint-back">tap to flip back</div>`
-    : `<div class="fc-jp-back">${esc(c.jp)}</div>${c.reading?`<div class="fc-reading">${esc(c.reading)}</div>`:''}<div class="fc-hint-back">tap to flip back</div>`;
+    ? `<div class="fc-en-back">${esc(c.meaning)}</div>${c.reading?`<div class="fc-reading" style="font-family:${jpFont}">${esc(c.reading)}</div>`:''}<div class="fc-hint-back">tap to flip back</div>`
+    : `<div class="fc-jp-back" style="font-family:${jpFont}">${esc(c.jp)}</div>${c.reading?`<div class="fc-reading" style="font-family:${jpFont}">${esc(c.reading)}</div>`:''}<div class="fc-hint-back">tap to flip back</div>`;
 
   area.innerHTML=`
     <div class="fc-scene">
