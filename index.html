@@ -565,7 +565,14 @@ nav button.active::after {
       <button class="btn-outline" onclick="newDeck()" style="width:100%">+ New deck</button>
     </div>
 
-    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v19</div>
+    <div class="drawer-section">
+      <div class="section-title">Danger zone</div>
+      <button onclick="resetAll()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer">
+        🗑 Delete everything
+      </button>
+    </div>
+
+    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v20</div>
   </div>
 </div>
 
@@ -1158,6 +1165,19 @@ function clearStats(name) {
   if(!confirm(`Clear stats for "${name}"?`)) return;
   cards(name).forEach(c=>delete state.cardStats[c.id]);
   save(); renderStats();
+}
+
+function resetAll() {
+  if (!confirm('Delete ALL decks, cards and stats? This cannot be undone.')) return;
+  if (!confirm('Are you sure? Everything will be lost.')) return;
+  localStorage.removeItem(KEY);
+  state = defaultData();
+  Object.keys(pickerState).forEach(k => delete pickerState[k]);
+  studyQueue = []; studyRem = 0; studyFor = 0;
+  studyForgottenCards = {};
+  closeSettings();
+  syncSelects();
+  switchTab('cards');
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
