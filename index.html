@@ -572,7 +572,7 @@ nav button.active::after {
       </button>
     </div>
 
-    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v20</div>
+    <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--ink3)">Tango v21</div>
   </div>
 </div>
 
@@ -688,16 +688,25 @@ function maybeCloseSettings(e) { if (e.target === document.getElementById('setti
 // ── IMPORT ────────────────────────────────────────────────────
 function importFile() {
   const fi = document.getElementById('import-file');
-  const msg = document.getElementById('import-msg');
   if (!fi.files.length) { setMsg('Choose a file first.','err'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim()&&!l.startsWith('#'));
     const typeKeywords = ['word','phrase','hiragana','katakana'];
     let added=0, skipped=0;
+
+    // Validate column count first — stop if any line has more than 4 columns
+    for (let i = 0; i < lines.length; i++) {
+      const sep = lines[i].includes('\t') ? '\t' : ',';
+      const parts = lines[i].split(sep);
+      if (parts.length > 4) {
+        setMsg(`✗ Error on line ${i+1}: too many columns (${parts.length}). Max 4 allowed: Japanese, Reading, Meaning, Deck. Import cancelled.`, 'err');
+        fi.value='';
+        return;
+      }
+    }
+
     lines.forEach(line => {
-      // Split carefully: JP, Reading, Meaning are first 3 columns
-      // Everything after column 3 (joined back) is the deck name
       const sep = line.includes('\t') ? '\t' : ',';
       const parts = line.split(sep).map(s=>s.trim().replace(/^["']|["']$/g,''));
       const jp      = parts[0] || '';
@@ -705,17 +714,10 @@ function importFile() {
       const meaning = parts[2] || '';
       if (!jp || !meaning) { skipped++; return; }
 
-      // Columns after meaning: skip type keywords, find first non-type as deck
-      let rawDeck = '';
-      for (let i = 3; i < parts.length; i++) {
-        const val = parts[i].trim();
-        if (!val) continue;
-        if (typeKeywords.includes(val.toLowerCase())) continue; // skip type keywords
-        rawDeck = val;
-        break;
-      }
+      // Col 3: if it's a type keyword skip it, otherwise use as deck
+      const col3 = (parts[3]||'').trim();
+      const rawDeck = typeKeywords.includes(col3.toLowerCase()) ? '' : col3;
 
-      // Case-insensitive deck match against existing decks
       const existingDeck = rawDeck
         ? Object.keys(state.decks).find(d => d.toLowerCase() === rawDeck.toLowerCase())
         : null;
